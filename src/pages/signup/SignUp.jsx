@@ -90,10 +90,42 @@ export default function SignUp() {
             alert("Registered successfully! Data saved to Database.");
             navigate('/login');
         } catch (err) {
-            setError(err.response?.data?.message || "Registration failed. Check your database connection.");
-        } finally {
-            setLoading(false);
+    const errorData = err.response?.data;
+
+    // لو الـ backend بعت array من الـ errors زي Identity errors
+    if (Array.isArray(errorData)) {
+        const code = errorData[0]?.code;
+        const description = errorData[0]?.description;
+
+        if (code === "DuplicateUserName" || code === "DuplicateEmail") {
+            setError("This email is already registered. Please use a different email.");
+        } else if (code === "PasswordTooShort") {
+            setError("Password is too short.");
+        } else if (code === "PasswordRequiresNonAlphanumeric") {
+            setError("Password must contain at least one special character.");
+        } else if (code === "PasswordRequiresDigit") {
+            setError("Password must contain at least one number.");
+        } else if (code === "PasswordRequiresUpper") {
+            setError("Password must contain at least one uppercase letter.");
+        } else {
+            setError(description || "Registration failed. Please try again.");
         }
+
+    // لو الـ backend بعت object فيه message
+    } else if (errorData?.message) {
+        setError(errorData.message);
+
+    // لو string عادي
+    } else if (typeof errorData === "string") {
+        setError(errorData);
+
+    // أي حاجة تانية
+    } else {
+        setError("Registration failed. Please check your data and try again.");
+    }
+} finally {
+    setLoading(false);
+}
     };
 
     return (
