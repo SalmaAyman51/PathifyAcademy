@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ArrowRight, GraduationCap, Users, BookOpen, ShieldCheck } from 'lucide-react';
+import Logo from '../components/Logo';
+
 
 export default function Welcome() {
   return (
@@ -9,9 +11,9 @@ export default function Welcome() {
       {/* Navbar */}
       <nav className="fixed top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#3d6c8a] font-bold text-white shadow-lg shadow-[#3d6c8a]/20">P</div>
-            <span className="text-2xl font-extrabold tracking-tight text-slate-800">Pathify</span>
+          <div className="flex items-center justify-start">
+          
+            <Logo width="100px" height="60px" className="object-contain" />
           </div>
           <div className="flex items-center gap-4">
             <Link to="/login" className="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:text-[#3d6c8a] transition-colors">Login</Link>

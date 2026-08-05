@@ -54,7 +54,17 @@ export default function Login() {
 
                 if (userRole === "admin") {
                     navigate('/admin/overview');
-                } else {
+                } 
+                else if (userRole === "superadmin") {
+                    navigate('/superadmin/dashboard');
+                }
+                else if (userRole === "internalprofessor") {
+                    navigate('/professor/internal');
+                }
+                else if (userRole === "externalprofessor") {
+                    navigate('/professor/external');
+                }
+                else {
                     navigate('/student/dashboard');
                 }
 
@@ -76,7 +86,7 @@ export default function Login() {
                 {/* Left Side (Image) */}
                 <div className="hidden flex-1 items-center justify-center bg-[#f0f4f8] p-10 md:flex">
                     {/* تأكدي إن مسار الصورة صح */}
-                    <img src="../../images/2f4466b5-f0d1-4143-ab93-6f23e8a5aeb8.jpg" alt="Login illustration" className="max-w-full h-auto rounded-lg shadow-sm" />
+                    <img src="../../images/login.jpg" alt="Login illustration" className="max-w-full h-auto rounded-lg shadow-sm" />
                 </div>
 
                 {/* Right Side (Form) */}

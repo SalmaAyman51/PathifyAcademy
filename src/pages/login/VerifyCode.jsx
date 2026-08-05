@@ -1,54 +1,73 @@
+
 import React, { useState, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import API from '../../api'; // ملف الـ axios الموحد الخاص بمشروعكم
 
 const VerifyCode = () => {
     const [otp, setOtp] = useState(new Array(6).fill(""));
     const [error, setError] = useState(false);
+    const [errorMsg, setErrorMsg] = useState(""); // لحفظ رسالة الخطأ القادمة من الـ API
     const [loading, setLoading] = useState(false);
     const inputRefs = useRef([]); 
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // استقبال الإيميل الممرر من صفحة forgot-password
+    const email = location.state?.email || "";
 
     const handleChange = (element, index) => {
         if (isNaN(element.value)) return false;
         
-        // Update the OTP array
         const newOtp = [...otp.map((d, idx) => (idx === index ? element.value : d))];
         setOtp(newOtp);
         setError(false);
+        setErrorMsg("");
 
-        // Move focus to next input if value is entered
         if (element.nextSibling && element.value) {
             element.nextSibling.focus();
         }
     };
 
     const handleKeyDown = (e, index) => {
-        // Move focus to previous input on backspace if current field is empty
         if (e.key === "Backspace" && !otp[index] && index > 0) {
             inputRefs.current[index - 1].focus();
         }
     };
 
-    const handleVerify = (e) => {
+    const handleVerify = async (e) => {
         e.preventDefault();
         const code = otp.join("");
         
         if (code.length < 6) {
             setError(true);
+            setErrorMsg("Please enter the full 6-digit code");
             return;
         }
 
         setLoading(true);
 
-        // Mock API Call
-        setTimeout(() => {
-            if (code === "123456") { // Example Success Code
-                navigate("/reset-password");
-            } else {
-                setError(true);
-                setLoading(false);
+        try {
+            // إرسال الإيميل والكود المكتوب للـ API
+            const response = await API.post('/Account/verify-code', {
+                Email: email,
+                Code: code
+            });
+
+            if (response.status === 200) {
+                // لو الكود صح، بننقل المستخدم لصفحة تغيير الباسورد وبنمرر الإيميل والـ كود للخطوة الجاية
+                navigate("/reset-password", { state: { email, code } });
             }
-        }, 1500);
+
+        } catch (error) {
+            console.error("Verification Error:", error);
+            setError(true);
+            
+            // عرض رسالة الخطأ القادمة من الـ API (مثل "Invalid code" أو "Email not found")
+            const serverMessage = error.response?.data || "Invalid code. Try again.";
+            setErrorMsg(serverMessage);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -127,7 +146,9 @@ const VerifyCode = () => {
 
             <div className="verify-card">
                 <h2>Check your email</h2>
-                <p style={{color: '#64748b', fontSize: '14px'}}>We've sent a code to your email</p>
+                <p style={{color: '#64748b', fontSize: '14px'}}>
+                    {email ? `We've sent a code to ${email}` : "We've sent a code to your email"}
+                </p>
                 
                 <form onSubmit={handleVerify}>
                     <div className="otp-box">
@@ -136,6 +157,7 @@ const VerifyCode = () => {
                                 key={index}
                                 type="text"
                                 maxLength="1"
+                                disabled={loading}
                                 value={data}
                                 ref={(el) => (inputRefs.current[index] = el)}
                                 onChange={(e) => handleChange(e.target, index)}
@@ -145,14 +167,14 @@ const VerifyCode = () => {
                         ))}
                     </div>
 
-                    {error && <span className="error-msg">⚠️ Invalid code. Try again.</span>}
+                    {error && <span className="error-msg">⚠️ {errorMsg}</span>}
 
                     <button type="submit" className="v-btn" disabled={loading}>
                         {loading ? "Verifying..." : "Verify Code"}
                     </button>
                 </form>
 
-                <Link to="/" style={{display: 'block', marginTop: '20px', color: '#3d6c8a', textDecoration: 'none'}}>
+                <Link to="/login" style={{display: 'block', marginTop: '20px', color: '#3d6c8a', textDecoration: 'none'}}>
                     Back to Login
                 </Link>
             </div>

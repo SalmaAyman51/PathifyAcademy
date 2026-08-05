@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, BookOpen, FolderKanban, 
-  User, LogOut, Search, Bell 
+  User, LogOut 
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
+import Logo from '../components/Logo';
+
+const API = import.meta.env.VITE_API_URL;
 
 const SidebarLink = ({ icon: Icon, label, to, end = false }) => (
   <NavLink
@@ -26,6 +29,30 @@ export default function StudentLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [studentName, setStudentName] = useState(user?.name || 'Student');
+
+  useEffect(() => {
+    const fetchName = async () => {
+      const token = localStorage.getItem('userToken');
+      if (!token) return;
+
+      try {
+        const res = await fetch(`${API}/api/ProjectManagement/name`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (data?.name) setStudentName(data.name);
+      } catch {
+        // keep fallback name on failure
+      }
+    };
+
+    fetchName();
+  }, []);
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -36,8 +63,9 @@ export default function StudentLayout() {
       {/* Sidebar */}
       <aside className="flex w-[240px] flex-col border-r border-[#cbd5e1] bg-[#e2e8f0] p-[15px]">
         <div className="mb-[30px] flex items-center gap-2.5">
-          <div className="flex h-[30px] w-[30px] items-center justify-center rounded-[7px] bg-[#3d6c8a] font-bold text-white">P</div>
-          <span className="text-xl font-bold text-[#1e293b]">Pathify</span>
+          <div className="flex items-center justify-start">
+            <Logo width="100px" height="60px" className="object-contain" />
+          </div>
         </div>
         <nav className="flex-1 space-y-1">
           <SidebarLink icon={LayoutDashboard} label="Dashboard" to="/student/dashboard" end />
@@ -57,21 +85,14 @@ export default function StudentLayout() {
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="flex h-[60px] items-center justify-between border-b border-[#e2e8f0] bg-white px-[30px]">
-          <div className="flex w-[280px] items-center gap-2.5 rounded-[10px] bg-[#f1f5f9] px-[15px] py-[7px]">
-            <Search size={16} className="text-[#94a3b8]" />
-            <input type="text" placeholder="Search anything..." className="w-full bg-transparent text-[13px] outline-none" />
-          </div>
-          <div className="flex items-center gap-[25px]">
-            <Bell size={19} className="cursor-pointer text-[#64748b]" />
-            <div className="flex items-center gap-2.5">
-              <div className="text-right">
-                <p className="text-[13px] font-bold">{user?.name || 'Student'}</p>
-                <p className="text-[11px] text-[#94a3b8]">Student</p>
-              </div>
-              <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#3d6c8a] font-bold text-white">
-                {user?.name?.split(' ').map(n => n[0]).join('') || 'S'}
-              </div>
+        <header className="flex h-[60px] items-center justify-end border-b border-[#e2e8f0] bg-white px-[30px]">
+          <div className="flex items-center gap-2.5">
+            <div className="text-right">
+              <p className="text-[13px] font-bold">{studentName}</p>
+              <p className="text-[11px] text-[#94a3b8]">Student</p>
+            </div>
+            <div className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#3d6c8a] font-bold text-white">
+              {studentName.split(' ').map(n => n[0]).join('').slice(0, 2) || 'S'}
             </div>
           </div>
         </header>

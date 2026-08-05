@@ -199,12 +199,12 @@ export default function PendingProjects() {
           >
             Accounts
           </NavLink>
-          <NavLink
+          {/* <NavLink
             to="/admin/pending-projects"
             className={({ isActive }) => `px-5 py-1.5 rounded-lg font-bold transition-all ${isActive ? 'bg-white text-[#3d6c8a] shadow-sm' : 'text-[#64748b]'}`}
           >
             Projects
-          </NavLink>
+          </NavLink> */}
         </div>
       </div>
 

@@ -2,10 +2,12 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import AcademicBot from './components/AcademicBot';
 
 // Layouts
 import AdminLayout from './layouts/AdminLayout';
 import StudentLayout from './layouts/StudentLayout';
+import ProfessorLayout from './layouts/ProfessorLayout'; // ADDED
 
 // Shared Pages
 import Welcome from './pages/Welcome';
@@ -20,16 +22,25 @@ import AdminProfessors from './pages/admin/Professors';
 import AdminCourses from './pages/admin/Courses';
 import AdminProjects from './pages/admin/Projects';
 import AdminEnrollments from './pages/admin/Enrollments';
+import AdminProfile from './pages/admin/Profile';
 
 // --- NEWLY ADDED ADMIN PAGES ---
 import PendingAccounts from './pages/admin/PendingAccounts';
 import PendingProjects from './pages/admin/PendingProjects';
+
+// SuperAdmin
+import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard';
 
 // Student Pages
 import StudentDashboard from './pages/student/Dashboard';
 import StudentCourses from './pages/student/Courses';
 import StudentProjects from './pages/student/Projects';
 import StudentProfile from './pages/student/Profile';
+
+// Professor Pages (NEW)
+import InternalProfessor from './pages/professor/InternalProfessor';
+import ExternalProfessor from './pages/professor/ExternalProfessor';
+import ProfessorProfile from './pages/professor/Profile';
 
 // Auth Flow Pages
 import ForgotPassword from './pages/login/ForgotPassword';
@@ -39,11 +50,32 @@ import ResetPassword from './pages/login/ResetPassword';
 // Redirect helper
 import { useAuth } from './context/AuthContext';
 
+const isProfessor = (role) =>
+  role === 'professor' || role === 'internalprofessor' || role === 'externalprofessor';
+
 const NavigateToDashboard = () => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/welcome" replace />;
-  return <Navigate to={user.role === 'admin' ? '/admin/overview' : '/student/dashboard'} replace />;
+
+  if (user.role === 'superadmin') return <Navigate to="/superadmin/dashboard" replace />;
+
+  if (isProfessor(user.role)) {
+    return (
+      <Navigate
+        to={user.role === 'externalprofessor' ? '/professor/external' : '/professor/internal'}
+        replace
+      />
+    );
+  }
+  return <Navigate to={user.role === 'admin' ? '/admin' : '/student'} replace />;
+};
+
+const ProfessorIndexRedirect = () => {
+  const { user } = useAuth();
+  return (
+    <Navigate to={user?.role === 'externalprofessor' ? 'external' : 'internal'} replace />
+  );
 };
 
 export default function App() {
@@ -59,7 +91,7 @@ export default function App() {
           <Route path="/verify-code" element={<VerifyCode />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* Root Redirect - Sends user to dashboard if logged in, else welcome */}
+          {/* Root Redirect */}
           <Route path="/" element={<NavigateToDashboard />} />
 
           {/* Admin Routes */}
@@ -78,10 +110,27 @@ export default function App() {
             <Route path="courses" element={<AdminCourses />} />
             <Route path="projects" element={<AdminProjects />} />
             <Route path="enrollments" element={<AdminEnrollments />} />
-            
-            {/* NEWLY ADDED PENDING ROUTES */}
+            <Route path="profile" element={<AdminProfile />} />
             <Route path="pending-accounts" element={<PendingAccounts />} />
             <Route path="pending-projects" element={<PendingProjects />} />
+          </Route>
+
+          {/* SuperAdmin */}
+          <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
+
+          {/* Professor Routes (NEWLY ADDED) */}
+          <Route 
+            path="/professor" 
+            element={
+              <ProtectedRoute allowedRoles={['professor', 'internalprofessor', 'externalprofessor', 'admin']}>
+  <ProfessorLayout />
+</ProtectedRoute>
+            }
+          >
+           <Route index element={<ProfessorIndexRedirect />} />
+            <Route path="internal" element={<InternalProfessor />} />
+            <Route path="external" element={<ExternalProfessor />} />
+            <Route path="profile" element={<ProfessorProfile />} />
           </Route>
 
           {/* Student Routes */}
@@ -90,6 +139,7 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['student']}>
                 <StudentLayout />
+                <AcademicBot />
               </ProtectedRoute>
             }
           >
